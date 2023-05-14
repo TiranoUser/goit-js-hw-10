@@ -1,40 +1,38 @@
 import Notiflix from 'notiflix';
-// import debounce from 'lodash/debounce';
+import debounce from 'lodash.debounce';
 
 import './css/styles.css';
 
 const DEBOUNCE_DELAY = 300;
-// _.debounce(func, [(wait = 0)], [(options = {})]);
-
-// _.debounce( , DEBOUNCE_DELAY);
 
 const inputEl = document.getElementById('search-box');
 const countrylistEl = document.querySelector('.country-list');
 const countryInfoEl = document.querySelector('.country-info');
 
-inputEl.addEventListener('input', () => {
-  choiceOfСountries()
-    .then(data => {
-      if (data.length > 10) {
-        countrylistEl.innerHTML = '';
-        countryInfoEl.innerHTML = '';
-        console.log(data);
-        Notiflix.Notify.info(
-          'Too many matches found. Please enter a more specific name.'
-        );
-      } else if (data.length > 1) {
-        renderCountriesList(data);
-      } else {
-        renderCountryInfo(data);
-      }
-    })
-    .catch(error => console.log(error));
-});
+inputEl.addEventListener(
+  'input',
+  debounce(() => {
+    choiceOfСountries()
+      .then(data => {
+        if (data.length > 10) {
+          countrylistEl.innerHTML = '';
+          countryInfoEl.innerHTML = '';
+          Notiflix.Notify.info(
+            'Too many matches found. Please enter a more specific name.'
+          );
+        } else if (data.length > 1) {
+          renderCountriesList(data);
+        } else {
+          renderCountryInfo(data);
+        }
+      })
+      .catch(error => console.log(error));
+  }, DEBOUNCE_DELAY)
+);
 
 function renderCountriesList(countries) {
   countryInfoEl.innerHTML = '';
   const markup = countries
-    // <li><img src="" alt=""><span></span></li>
     .map(country => {
       return `<li style="list-style-type: none">
       <img src="${country.flags.svg}" alt="" width="50"><span style="margin-left:20px; font-size:40px">${country.name.official}</span></li>`;
@@ -66,7 +64,7 @@ function renderCountryInfo(countries) {
 }
 
 function choiceOfСountries() {
-  const value = inputEl.value;
+  const value = inputEl.value.trim();
 
   return fetch(
     `https://restcountries.com/v3.1/name/${value}?fields=name,capital,population,flags,languages`
