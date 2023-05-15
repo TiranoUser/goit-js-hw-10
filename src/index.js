@@ -12,11 +12,17 @@ const countryInfoEl = document.querySelector('.country-info');
 inputEl.addEventListener(
   'input',
   debounce(() => {
-    choiceOfСountries()
+    clearHtml();
+
+    const value = inputEl.value.trim();
+
+    if (value.length === 0) {
+      return;
+    }
+
+    choiceOfСountries(value)
       .then(data => {
         if (data.length > 10) {
-          countrylistEl.innerHTML = '';
-          countryInfoEl.innerHTML = '';
           Notiflix.Notify.info(
             'Too many matches found. Please enter a more specific name.'
           );
@@ -26,12 +32,13 @@ inputEl.addEventListener(
           renderCountryInfo(data);
         }
       })
-      .catch(error => console.log(error));
+      .catch(error =>
+        Notiflix.Notify.failure('Oops, there is no country with that name')
+      );
   }, DEBOUNCE_DELAY)
 );
 
 function renderCountriesList(countries) {
-  countryInfoEl.innerHTML = '';
   const markup = countries
     .map(country => {
       return `<li style="list-style-type: none">
@@ -42,8 +49,6 @@ function renderCountriesList(countries) {
 }
 
 function renderCountryInfo(countries) {
-  countrylistEl.innerHTML = '';
-  console.log(countries);
   const markup = countries
     .map(country => {
       return `<ul style="list-style-type: none; font-size:40px">
@@ -63,18 +68,19 @@ function renderCountryInfo(countries) {
   countryInfoEl.innerHTML = markup;
 }
 
-function choiceOfСountries() {
-  const value = inputEl.value.trim();
-
+function choiceOfСountries(value) {
   return fetch(
     `https://restcountries.com/v3.1/name/${value}?fields=name,capital,population,flags,languages`
   ).then(response => {
     if (!response.ok) {
-      countrylistEl.innerHTML = '';
-      countryInfoEl.innerHTML = '';
-      Notiflix.Notify.failure('Oops, there is no country with that name');
+      throw new Error(response.statusText);
     }
 
     return response.json();
   });
+}
+
+function clearHtml() {
+  countrylistEl.innerHTML = '';
+  countryInfoEl.innerHTML = '';
 }
